@@ -1,9 +1,5 @@
 # 🎸 Professional Guitar Tuner
 
-<p align="center">
-  <img src="public/korye-logo.png" alt="Korye.AI Logo" width="200"/>
-</p>
-
 A high-precision guitar tuner built with React, TypeScript, and advanced pitch detection algorithms. Features dual visualization modes (analog needle and LED bar) with adaptive smoothing for accurate tuning across all strings.
 
 ![Guitar Tuner](https://img.shields.io/badge/Status-Active-success)
@@ -127,7 +123,5 @@ MIT License - feel free to use this project for personal or commercial purposes.
 
 ---
 
-**Made with ❤️ by Korye Creations** 🎸
-
-*Korye Creations - Crafting digital tools for musicians*
+**Made with ❤️ for guitarists everywhere** 🎸
 
