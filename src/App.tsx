@@ -18,10 +18,7 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
-          <img src="/korye-logo.png" alt="Korye.AI" style={{ width: '32px', height: '32px' }} />
-          <p>Powered by Korye Creations</p>
-        </div>
+        <p>Professional Guitar Tuner</p>
       </footer>
     </div>
   );
