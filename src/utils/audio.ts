@@ -1,61 +1,76 @@
 export function autoCorrelate(buffer: Float32Array, sampleRate: number): number {
-    let size = buffer.length;
+    const SIZE = buffer.length;
+
+    // 1. RMS Volume Check
     let rms = 0;
-
-    // 1. Compute RMS to check if there's enough signal
-    for (let i = 0; i < size; i++) {
-        const val = buffer[i];
-        rms += val * val;
+    for (let i = 0; i < SIZE; i++) {
+        rms += buffer[i] * buffer[i];
     }
-    rms = Math.sqrt(rms / size);
+    rms = Math.sqrt(rms / SIZE);
+    if (rms < 0.01) return -1;
 
-    if (rms < 0.01) {
-        return -1; // Not enough signal
+    // 2. NSDF (Normalized Square Difference Function)
+    const MIN_LAG = Math.floor(sampleRate / 2000); // Max freq ~2kHz
+    const MAX_LAG = Math.floor(sampleRate / 60);   // Min freq ~60Hz
+
+    let bestLag = -1;
+    let maxNsdf = -1;
+
+    // Increased threshold for better accuracy
+    const PEAK_THRESHOLD = 0.9;
+    const N = Math.floor(SIZE / 2);
+
+    // Compute NSDF array
+    const nsdfBuffer = new Float32Array(MAX_LAG);
+    for (let lag = MIN_LAG; lag < MAX_LAG; lag++) {
+        let r = 0;
+        let m = 0;
+        for (let i = 0; i < N; i++) {
+            r += buffer[i] * buffer[i + lag];
+            m += buffer[i] * buffer[i] + buffer[i + lag] * buffer[i + lag];
+        }
+        nsdfBuffer[lag] = 2 * r / m;
     }
 
-    let r1 = 0;
-    const threshold = 0.2;
+    // Find the first significant peak
+    for (let lag = MIN_LAG + 1; lag < MAX_LAG - 1; lag++) {
+        const prev = nsdfBuffer[lag - 1];
+        const curr = nsdfBuffer[lag];
+        const next = nsdfBuffer[lag + 1];
 
-    // Find the first point where the signal goes below a threshold to avoid the zero-lag peak
-    for (let i = 0; i < size / 2; i++) {
-        if (Math.abs(buffer[i]) < threshold) {
-            r1 = i;
+        if (curr > PEAK_THRESHOLD && curr > prev && curr > next) {
+            bestLag = lag;
+            maxNsdf = curr;
             break;
         }
     }
 
-    // Calculate correlation for different lags
-    let bestOffset = -1;
-    let bestCorrelation = 0;
+    // Fallback with higher threshold for better accuracy
+    if (bestLag === -1) {
+        const FALLBACK_THRESHOLD = 0.6;
+        let globalMax = 0;
+        let globalLag = -1;
 
-    // We search lags from r1 up to half the buffer size
-    for (let lag = r1; lag < size / 2; lag++) {
-        let sum = 0;
-        for (let i = 0; i < size - lag; i++) {
-            sum += buffer[i] * buffer[i + lag];
+        for (let lag = MIN_LAG + 1; lag < MAX_LAG - 1; lag++) {
+            const curr = nsdfBuffer[lag];
+            if (curr > globalMax) {
+                globalMax = curr;
+                globalLag = lag;
+            }
         }
 
-        const correlation = sum;
-        if (correlation > bestCorrelation) {
-            bestCorrelation = correlation;
-            bestOffset = lag;
+        if (globalMax > FALLBACK_THRESHOLD) {
+            bestLag = globalLag;
+        } else {
+            return -1;
         }
     }
 
-    if (bestCorrelation > 0.01) {
-        // Parabolic interpolation for better precision
-        const x1 = bestOffset - 1;
-        const x3 = bestOffset + 1;
+    // Parabolic Interpolation for precision
+    const prev = nsdfBuffer[bestLag - 1];
+    const next = nsdfBuffer[bestLag + 1];
+    const curr = nsdfBuffer[bestLag];
 
-        let correlation1 = 0;
-        let correlation3 = 0;
-
-        for (let i = 0; i < size - x1; i++) correlation1 += buffer[i] * buffer[i + x1];
-        for (let i = 0; i < size - x3; i++) correlation3 += buffer[i] * buffer[i + x3];
-
-        const shift = (correlation1 - correlation3) / (2 * (correlation1 - 2 * bestCorrelation + correlation3));
-        return sampleRate / (bestOffset + shift);
-    }
-
-    return -1;
+    const shift = (next - prev) / (2 * (2 * curr - next - prev));
+    return sampleRate / (bestLag + shift);
 }

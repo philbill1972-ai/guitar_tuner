@@ -1,0 +1,67 @@
+.led-bar-meter {
+    width: 100%;
+    max-width: 400px;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.led-container {
+    display: flex;
+    gap: 6px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50px;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.led {
+    width: 12px;
+    height: 24px;
+    border-radius: 4px;
+    background: #333;
+    transition: all 0.05s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.led.center {
+    width: 16px;
+    height: 28px;
+    margin-top: -2px;
+}
+
+/* Colors */
+.led-green.on {
+    background: var(--accent-success);
+    box-shadow: 0 0 15px var(--accent-success);
+}
+
+.led-yellow.on {
+    background: var(--accent-warning);
+    box-shadow: 0 0 15px var(--accent-warning);
+}
+
+.led-red.on {
+    background: var(--accent-danger);
+    box-shadow: 0 0 15px var(--accent-danger);
+}
+
+.led-labels {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 1rem;
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.center-label {
+    color: var(--accent-success);
+    text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+}

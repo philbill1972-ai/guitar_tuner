@@ -14,6 +14,14 @@
     margin-bottom: 1rem;
 }
 
+.selectors-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 .tuning-selector {
     background: var(--bg-panel);
     color: var(--text-main);
@@ -21,6 +29,57 @@
     padding: 0.5rem 1rem;
     border-radius: 8px;
     font-family: var(--font-main);
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tuning-selector:hover {
+    border-color: var(--accent-primary);
+}
+
+.device-selector {
+    max-width: 200px;
+}
+
+.visual-mode-toggle {
+    display: flex;
+    background: var(--bg-panel);
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.mode-btn:hover {
+    color: var(--text-main);
+}
+
+.mode-btn.active {
+    background: var(--accent-primary);
+    color: var(--bg-dark);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+}
+
+.tuner-display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
 }
 
 .note-display {
@@ -30,6 +89,15 @@
     text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
     line-height: 1;
     position: relative;
+    min-height: 8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.note-name.placeholder {
+    opacity: 0.1;
+    font-size: 6rem;
 }
 
 .note-octave {

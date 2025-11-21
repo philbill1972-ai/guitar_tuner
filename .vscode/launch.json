@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Guitar Tuner",
+            "url": "http://localhost:5174",
+            "webRoot": "${workspaceFolder}/src",
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*"
+            }
+        },
+        {
+            "type": "edge",
+            "request": "launch",
+            "name": "Launch Guitar Tuner (Edge)",
+            "url": "http://localhost:5174",
+            "webRoot": "${workspaceFolder}/src"
+        }
+    ]
+}

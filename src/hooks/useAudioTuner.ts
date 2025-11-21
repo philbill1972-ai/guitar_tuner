@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { autoCorrelate } from '../utils/audio';
 import type { NoteData } from '../utils/note';
 import { getNoteFromFrequency } from '../utils/note';
@@ -11,32 +11,15 @@ export interface TunerStatus {
 export function useAudioTuner() {
     const [status, setStatus] = useState<TunerStatus>({ isListening: false, error: null });
     const [noteData, setNoteData] = useState<NoteData | null>(null);
-    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const rafIdRef = useRef<number | null>(null);
     const bufferRef = useRef<Float32Array | null>(null);
+    const frequencyHistoryRef = useRef<number[]>([]);
 
-    const getDevices = async () => {
-        try {
-            const devs = await navigator.mediaDevices.enumerateDevices();
-            setDevices(devs.filter(d => d.kind === 'audioinput'));
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    useEffect(() => {
-        getDevices();
-        navigator.mediaDevices.addEventListener('devicechange', getDevices);
-        return () => {
-            navigator.mediaDevices.removeEventListener('devicechange', getDevices);
-        };
-    }, []);
-
-    const updatePitch = useCallback(() => {
+    const updatePitch = () => {
         if (!analyserRef.current || !audioContextRef.current || !bufferRef.current) return;
 
         const analyser = analyserRef.current;
@@ -48,12 +31,31 @@ export function useAudioTuner() {
         const frequency = autoCorrelate(buffer, sampleRate);
 
         if (frequency > -1) {
-            const note = getNoteFromFrequency(frequency);
+            // Add to history for smoothing
+            frequencyHistoryRef.current.push(frequency);
+
+            // Adaptive smoothing: more for bass notes (< 200Hz), less for treble
+            // Low E = 82Hz, A = 110Hz, D = 147Hz need more smoothing
+            // G = 196Hz, B = 247Hz, high E = 330Hz need less
+            const smoothingWindow = frequency < 200 ? 6 : 3;
+
+            // Keep only the required number of readings
+            if (frequencyHistoryRef.current.length > smoothingWindow) {
+                frequencyHistoryRef.current.shift();
+            }
+
+            // Calculate average frequency
+            const avgFrequency = frequencyHistoryRef.current.reduce((a, b) => a + b, 0) / frequencyHistoryRef.current.length;
+
+            const note = getNoteFromFrequency(avgFrequency);
             setNoteData(note);
+        } else {
+            // Clear history if no signal detected
+            frequencyHistoryRef.current = [];
         }
 
         rafIdRef.current = requestAnimationFrame(updatePitch);
-    }, []);
+    };
 
     const startTuner = async (deviceId?: string) => {
         try {
@@ -73,14 +75,17 @@ export function useAudioTuner() {
 
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-            // Refresh devices list now that we have permission
-            getDevices();
-
             const analyser = audioContext.createAnalyser();
-            analyser.fftSize = 2048;
+            analyser.fftSize = 4096;
 
             const source = audioContext.createMediaStreamSource(stream);
-            source.connect(analyser);
+
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 1000;
+
+            source.connect(filter);
+            filter.connect(analyser);
 
             analyserRef.current = analyser;
             sourceRef.current = source;
@@ -108,22 +113,14 @@ export function useAudioTuner() {
 
         setStatus(prev => ({ ...prev, isListening: false }));
         setNoteData(null);
+        frequencyHistoryRef.current = [];
     };
-
-    useEffect(() => {
-        return () => {
-            stopTuner();
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-            }
-        };
-    }, []);
 
     return {
         startTuner,
         stopTuner,
         status,
         noteData,
-        devices
+        devices: []
     };
 }
