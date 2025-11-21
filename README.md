@@ -123,4 +123,7 @@ MIT License - feel free to use this project for personal or commercial purposes.
 
 ---
 
-**Made with ❤️ for guitarists everywhere** 🎸
+**Made with ❤️ by Korye Creations** 🎸
+
+*Korye Creations - Crafting digital tools for musicians*
+
